@@ -91,8 +91,8 @@ def get_gtdict_filenames(ground_truth_segm_file, filenum):
     return gt_segm_dict, video_file, hdf5_file
 
 
-def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
-    slider_ts = dt.datetime.fromtimestamp(epoch_req) - dt.timedelta(hours=1)
+def get_line_plot(traj, epoch_queried, gt_segm_dict=None, skill_choice=None):
+    slider_ts = dt.datetime.fromtimestamp(epoch_queried)  # - dt.timedelta(hours=1)
     vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
     lineplot_tf = traj.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
         xlabel="Time", ylabel="Position"
@@ -176,18 +176,33 @@ def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
     return overlay.opts(ylim=(y_bottom, y_top))
 
 
+def conv_epoch2frame(
+    epoch_queried, epoch_ini, total_frames, epoch_end, synchro_vid=None, synchro_ts=None
+):
+    frame_idx = round(
+        (epoch_queried - epoch_ini) * total_frames / (epoch_end - epoch_ini)
+    )
+    return frame_idx
+
+
 @pn.cache
-def get_frame_plot(epoch_req, epoch_ini):
-    idx = epoch_req - epoch_ini
+def get_frame_plot(epoch_queried, epoch_ini, total_frames, epoch_end):
+    frame_idx = conv_epoch2frame(
+        epoch_queried=epoch_queried,
+        epoch_ini=epoch_ini,
+        total_frames=total_frames,
+        epoch_end=epoch_end,
+    )
+    # idx = epoch_queried - epoch_ini
     img = get_video_frame(
-        index=idx,
+        index=frame_idx,
         video_path=video_path,
     )
     frame_plot = pn.pane.Image(Image.fromarray(img), width=480, align="center")
     return frame_plot
 
 
-def count_frames_manual(video_path):
+def count_video_frames(video_path):
     """
     Custom function to manually count
     total number of frames
@@ -277,7 +292,7 @@ choice_dropdown = pn.widgets.Select(
 )
 
 print(f"TS length: {tf_data[0].shape[0]}")
-frame_count = count_frames_manual(video_path)
+total_frames = count_video_frames(video_path)
 video_fps = get_video_fps(video_path)
 traj = ts2df(tf_data=tf_data, gripper_data=gripper_data)
 print(traj)
@@ -295,14 +310,16 @@ slider_widget = pn.widgets.IntSlider(
 line_plt = pn.bind(
     get_line_plot,
     traj=traj,
-    epoch_req=slider_widget,
+    epoch_queried=slider_widget,
     skill_choice=choice_dropdown,
     gt_segm_dict=gt_segm_dict,
 )
 img_plt = pn.bind(
     get_frame_plot,
-    epoch_req=slider_widget,
+    epoch_queried=slider_widget,
     epoch_ini=epoch_ini,
+    total_frames=total_frames,
+    epoch_end=epoch_end,
 )
 centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
 pn.template.MaterialTemplate(
