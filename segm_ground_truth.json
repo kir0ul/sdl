@@ -3,7 +3,8 @@
     {
       "video": "long-task-1.MOV",
       "hdf5": "long-task-1.h5",
-      "synchro": 0,
+      "synchro_vid": 62,
+      "synchro_ts": 93,
       "segments": {
         "open-drawer": {
           "ini": 0,
