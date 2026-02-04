@@ -17,7 +17,6 @@ import warnings
 import datetime as dt
 import json
 from tqdm.auto import tqdm
-from segmentation_utils import get_video_frame
 
 pn.extension()
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -185,6 +184,44 @@ def conv_epoch2frame(
     return frame_idx
 
 
+def get_video_frame(frame_number, video_path):
+    # read a single frame
+    try:
+        # Open the video file
+        video = cv2.VideoCapture(video_path)
+
+        # Set the video's current frame to the specified frame number
+        video.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+
+        # Read the frame
+        ret, frame = video.read()
+        img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Add frame number overlay on image
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        txt = str(frame_number)
+        fontScale = 3
+        white = (255, 255, 255)
+        fontthickness = 5
+        cv2.putText(
+            img=img,
+            text=txt,
+            org=(10, 100),
+            fontFace=font,
+            fontScale=fontScale,
+            color=white,
+            thickness=fontthickness,
+        )
+
+        # Release the video file and close all windows
+        video.release()
+        cv2.destroyAllWindows()
+        return img
+    except StopIteration:
+        print("Reached the end of the video file")
+        return np.asarray(Image.new("RGB", (3840, 2160), (0, 0, 0)))
+
+
 @pn.cache
 def get_frame_plot(epoch_queried, epoch_ini, total_frames, epoch_end):
     frame_idx = conv_epoch2frame(
@@ -195,7 +232,7 @@ def get_frame_plot(epoch_queried, epoch_ini, total_frames, epoch_end):
     )
     # idx = epoch_queried - epoch_ini
     img = get_video_frame(
-        index=frame_idx,
+        frame_number=frame_idx,
         video_path=video_path,
     )
     frame_plot = pn.pane.Image(Image.fromarray(img), width=480, align="center")
