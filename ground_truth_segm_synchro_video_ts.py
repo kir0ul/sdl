@@ -181,7 +181,7 @@ def conv_epoch2frame(
     frame_synchro_diff = synchro_ts - synchro_vid
     frame_idx = round(
         (epoch_queried - epoch_ini) * total_frames / (epoch_end - epoch_ini)
-        - frame_synchro_diff
+        - 2*frame_synchro_diff
     )
     return frame_idx
 
