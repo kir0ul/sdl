@@ -17,7 +17,7 @@ For more general case
 [[file:docs/framework-schema.drawio.png]]
 *** LfD learning after building library?
 *** DONE Rename to "Segmentation" only
-** TODO Library of skills code
+** DONE Library of skills code
 ** DONE Get data for new tasks
 ** Symbolic plan?
 ** TODO Segment new data

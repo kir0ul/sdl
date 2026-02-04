@@ -1,0 +1,313 @@
+#!/usr/bin/env python3
+#
+# Run: `panel serve ground_truth_segm_synchro_video_ts.py`
+
+from pathlib import Path
+import hvplot.pandas  # noqa: F401
+import holoviews as hv
+import numpy as np
+import pandas as pd
+import panel as pn
+
+from PIL import Image
+import h5py
+import cv2
+
+import warnings
+import datetime as dt
+import json
+from tqdm.auto import tqdm
+from segmentation_utils import get_video_frame
+
+pn.extension()
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# PRIMARY_COLOR = "#0072B5"
+# SECONDARY_COLOR = "#B54300"
+# CSV_FILE = (
+#     "https://raw.githubusercontent.com/holoviz/panel/main/examples/assets/occupancy.csv"
+# )
+# hv.extension('bokeh')
+
+DATA_PATH_ROOT = Path(".") / "data"
+GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT.parent / "segm_ground_truth.json"
+FILENUM = 0
+
+
+pn.extension(design="material", sizing_mode="stretch_width")
+
+
+def read_h5_data(fname):
+    hf = h5py.File(fname, "r")
+    print(list(hf.keys()))
+    js = hf.get("joint_state_info")
+    joint_time = np.array(js.get("joint_time"))
+    joint_pos = np.array(js.get("joint_positions"))
+    joint_vel = np.array(js.get("joint_velocities"))
+    joint_eff = np.array(js.get("joint_effort"))
+    joint_data = [joint_time, joint_pos, joint_vel, joint_eff]
+
+    tf = hf.get("transform_info")
+    tf_time = np.array(tf.get("transform_time"))
+    tf_pos = np.array(tf.get("transform_positions"))
+    tf_rot = np.array(tf.get("transform_orientations"))
+    tf_data = [tf_time, tf_pos, tf_rot]
+    # print(tf_pos)
+
+    wr = hf.get("wrench_info")
+    wrench_time = np.array(wr.get("wrench_time"))
+    wrench_frc = np.array(wr.get("wrench_force"))
+    wrench_trq = np.array(wr.get("wrench_torque"))
+    wrench_data = [wrench_time, wrench_frc, wrench_trq]
+
+    gp = hf.get("gripper_info")
+    gripper_time = np.array(gp.get("gripper_time"))
+    gripper_pos = np.array(gp.get("gripper_position"))
+    # gripper_time = []
+    # gripper_pos = []
+    gripper_data = [gripper_time, gripper_pos]
+
+    hf.close()
+
+    return joint_data, tf_data, wrench_data, gripper_data
+
+
+def get_gtdict_filenames(ground_truth_segm_file, filenum):
+    if not ground_truth_segm_file.exists():
+        print(
+            "JSON ground truth segmentation file not found:\n"
+            f"`{ground_truth_segm_file}`"
+        )
+        return
+
+    # Load JSON as dict
+    with open(ground_truth_segm_file) as fid:
+        json_str = fid.read()
+    json_str = json.loads(json_str)
+    gt_array = json_str.get("groundtruth")
+    gt_segm_dict = gt_array[filenum]
+    video_file = gt_segm_dict.get("video")
+    hdf5_file = gt_segm_dict.get("hdf5")
+    return gt_segm_dict, video_file, hdf5_file
+
+
+def get_line_plot(traj, epoch_req, gt_segm_dict=None, skill_choice=None):
+    slider_ts = dt.datetime.fromtimestamp(epoch_req) - dt.timedelta(hours=1)
+    vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
+    lineplot_tf = traj.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
+        xlabel="Time", ylabel="Position"
+    )
+    lineplot_grip = traj.hvplot(x="timestamp", y=["gripper"], label="gripper")
+    # overlay.opts(opts.VLine(color="red", line_dash='dashed', line_width=6))
+    overlay = lineplot_tf * lineplot_grip * vline
+
+    y_low = np.min([traj.x.min(), traj.y.min(), traj.z.min(), traj.gripper.min()])
+    y_high = np.max([traj.x.max(), traj.y.max(), traj.z.max(), traj.gripper.max()])
+    y_range = np.abs(y_high - y_low) / 2
+    y_top = y_high + 0.1 * y_range
+    y_bottom = y_low - 0.1 * y_range
+
+    if skill_choice == "HigherLevel":
+        for sect_key in gt_segm_dict[skill_choice]:
+            sect_val = gt_segm_dict[skill_choice][sect_key]
+            xs = traj.timestamp[
+                (
+                    traj.timestamp
+                    > pd.Timestamp(
+                        dt.datetime.fromtimestamp(sect_val["ini"])
+                        - dt.timedelta(hours=1),
+                        tz="EST",
+                    )
+                )
+                & (
+                    traj.timestamp
+                    < pd.Timestamp(
+                        dt.datetime.fromtimestamp(sect_val["end"])
+                        - dt.timedelta(hours=1),
+                        tz="EST",
+                    )
+                )
+            ] - dt.timedelta(hours=5)
+            spread = hv.Spread(
+                (
+                    xs,
+                    y_range,
+                    y_range - y_bottom,
+                    y_range + y_top,
+                ),
+                label=sect_key,
+            ).opts(fill_alpha=0.15)
+            overlay = overlay * spread
+
+    elif skill_choice == "LowerLevel":
+        palette = hv.Palette.default_cycles["Set1"]
+        for idx, sect_key in enumerate(gt_segm_dict[skill_choice]):
+            sect_val = gt_segm_dict[skill_choice][sect_key]
+            for sect_cur in sect_val:
+                xs = traj.timestamp[
+                    (
+                        traj.timestamp
+                        > pd.Timestamp(
+                            dt.datetime.fromtimestamp(sect_cur["ini"])
+                            - dt.timedelta(hours=1),
+                            tz="EST",
+                        )
+                    )
+                    & (
+                        traj.timestamp
+                        < pd.Timestamp(
+                            dt.datetime.fromtimestamp(sect_cur["end"])
+                            - dt.timedelta(hours=1),
+                            tz="EST",
+                        )
+                    )
+                ] - dt.timedelta(hours=5)
+                spread = hv.Spread(
+                    (
+                        xs,
+                        y_range,
+                        y_range - y_bottom,
+                        y_range + y_top,
+                    ),
+                    label=sect_key,
+                ).opts(fill_alpha=0.15, color=palette[idx])
+                overlay = overlay * spread
+
+    return overlay.opts(ylim=(y_bottom, y_top))
+
+
+@pn.cache
+def get_frame_plot(epoch_req, epoch_ini):
+    idx = epoch_req - epoch_ini
+    img = get_video_frame(
+        index=idx,
+        video_path=video_path,
+    )
+    frame_plot = pn.pane.Image(Image.fromarray(img), width=480, align="center")
+    return frame_plot
+
+
+def count_frames_manual(video_path):
+    """
+    Custom function to manually count
+    total number of frames
+    """
+    # Capturing a video
+    video = cv2.VideoCapture(video_path)
+
+    # total frames set to 0
+    total_frames = 0
+
+    print("Counting video frames...")
+    pbar = tqdm()
+    # Using while statement
+    while True:
+        # Counting frames using loop
+        ret, frame = video.read()
+        if not ret:
+            break
+        total_frames += 1
+        pbar.update(1)
+    pbar.close()
+    video.release()
+    print(f"Total frames in video: {total_frames}")
+    return total_frames
+
+
+def get_video_fps(video_path):
+    video = cv2.VideoCapture(video_path)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    print(f"Frames per second in video: {fps}")
+    video.release()
+    return fps
+
+
+def ts2df(tf_data, gripper_data):
+    # ts_time = tf_data[0][:, 0] + tf_data[0][:, 1] * (10.0**-9)
+
+    def conv2timestamps(tarray):
+        # nanosec_conv = 1e-9
+        time_sec = tarray[:, 0]
+        time_nanosec = tarray[:, 1]
+        # time = time_sec + time_nanosec * nanosec_conv
+
+        timestamps = []
+        for t_idx, t_val in enumerate(time_sec):
+            timestamp = pd.Timestamp(
+                time_sec[t_idx], unit="s", tz="EST"
+            ) + pd.to_timedelta(time_nanosec[t_idx], unit="ns")
+            timestamps.append(timestamp)
+        timestamps = pd.Series(timestamps)
+        return timestamps
+
+    tf_df = pd.DataFrame(
+        {
+            "x": tf_data[1][:, 0],
+            "y": tf_data[1][:, 1],
+            "z": tf_data[1][:, 2],
+            "timestamp": conv2timestamps(tf_data[0]),
+        }
+    )
+
+    gripper_df = pd.DataFrame(
+        {
+            "val": gripper_data[1].squeeze(),
+            "timestamp": conv2timestamps(gripper_data[0]),
+        }
+    )
+    gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
+
+    # Merge both DataFrames into one
+    traj = pd.merge_asof(tf_df, gripper_df, on="timestamp")
+    traj.dropna(inplace=True, ignore_index=True)
+    traj.rename(columns={"val": "gripper"}, inplace=True)
+    return traj
+
+
+gt_segm_dict, video_file, hdf5_file = get_gtdict_filenames(
+    ground_truth_segm_file=GROUND_TRUTH_SEGM_FILE, filenum=FILENUM
+)
+hdf5_path = DATA_PATH_ROOT / hdf5_file
+video_path = DATA_PATH_ROOT / video_file
+joint_data, tf_data, wrench_data, gripper_data = read_h5_data(fname=hdf5_path)
+
+gt_file_keys = ["Raw", "Segmented"]
+choice_dropdown = pn.widgets.Select(
+    name="Segmentation", value=gt_file_keys[0], options=gt_file_keys
+)
+
+print(f"TS length: {tf_data[0].shape[0]}")
+frame_count = count_frames_manual(video_path)
+video_fps = get_video_fps(video_path)
+traj = ts2df(tf_data=tf_data, gripper_data=gripper_data)
+print(traj)
+epoch_ini = int(traj.timestamp.iloc[0].timestamp()) + 1
+epoch_end = int(traj.timestamp.iloc[-1].timestamp())
+slider_widget = pn.widgets.IntSlider(
+    name="Time step",
+    value=int((epoch_end - epoch_ini) / 2 + epoch_ini),
+    start=epoch_ini,
+    end=epoch_end - 1,
+)
+
+
+# Widgets & web app logic
+line_plt = pn.bind(
+    get_line_plot,
+    traj=traj,
+    epoch_req=slider_widget,
+    skill_choice=choice_dropdown,
+    gt_segm_dict=gt_segm_dict,
+)
+img_plt = pn.bind(
+    get_frame_plot,
+    epoch_req=slider_widget,
+    epoch_ini=epoch_ini,
+)
+centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
+pn.template.MaterialTemplate(
+    site="Segmentation",
+    title="Video vs. timeseries",
+    sidebar=[choice_dropdown],
+    main=[centered_img, slider_widget, line_plt],
+).servable()  # The ; is needed in the notebook to not display the template. Its not needed in a script

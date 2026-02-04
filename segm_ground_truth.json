@@ -1,0 +1,33 @@
+{
+  "groundtruth": [
+    {
+      "video": "long-task-1.MOV",
+      "hdf5": "long-task-1.h5",
+      "synchro": 0,
+      "segments": {
+        "open-drawer": {
+          "ini": 0,
+          "end": 0
+        },
+        "pick&place": [
+          {
+            "ini": 0,
+            "end": 0
+          },
+          {
+            "ini": 0,
+            "end": 0
+          }
+        ],
+        "close-drawer": {
+          "ini": 0,
+          "end": 0
+        },
+        "pour": {
+          "ini": 0,
+          "end": 0
+        }
+      }
+    }
+  ]
+}
