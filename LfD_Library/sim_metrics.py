@@ -27,4 +27,4 @@ def COS_metric(x, y):
             )
             / np.pi
         )
-    return sum
+    return sum / n_pts
