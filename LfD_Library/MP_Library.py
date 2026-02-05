@@ -44,7 +44,7 @@ class MP_Library(object):
                 print(f"Class matched: '{class_id}'")
         else:
             if name is None:
-                name = "demo" + str(self.get_num_demos())
+                name = "Skill_" + str(self.get_num_demos())
             self.library[name] = [demo]
             out = name
             if self.DEBUG:
