@@ -3,30 +3,30 @@
     {
       "video": "long-task-1.MOV",
       "hdf5": "long-task-1.h5",
-      "synchro_vid": 62,
-      "synchro_ts": 93,
+      "synchro_vid": 2036,
+      "synchro_ts": 2067,
       "segments": {
         "open-drawer": {
-          "ini": 0,
-          "end": 0
+          "ini": 1769723216,
+          "end": 1769723235
         },
         "pick&place": [
           {
-            "ini": 0,
-            "end": 0
+            "ini": 1769723235,
+            "end": 1769723248
           },
           {
-            "ini": 0,
-            "end": 0
+            "ini": 1769723248,
+            "end": 1769723262
           }
         ],
         "close-drawer": {
-          "ini": 0,
-          "end": 0
+          "ini": 1769723262,
+          "end": 1769723279
         },
         "pour": {
-          "ini": 0,
-          "end": 0
+          "ini": 1769723279,
+          "end": 1769723311
         }
       }
     }

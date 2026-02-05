@@ -178,10 +178,10 @@ def get_line_plot(traj, epoch_queried, gt_segm_dict=None, skill_choice=None):
 def conv_epoch2frame(
     epoch_queried, epoch_ini, total_frames, epoch_end, synchro_vid=None, synchro_ts=None
 ):
-    frame_synchro_diff = synchro_ts - synchro_vid
+    frame_synchro_diff = abs(synchro_ts - synchro_vid)
     frame_idx = round(
         (epoch_queried - epoch_ini) * total_frames / (epoch_end - epoch_ini)
-        - 2*frame_synchro_diff
+        - 2 * frame_synchro_diff
     )
     return frame_idx
 
@@ -361,7 +361,7 @@ img_plt = pn.bind(
     epoch_ini=epoch_ini,
     total_frames=total_frames,
     epoch_end=epoch_end,
-    gt_segm_dict=gt_segm_dict
+    gt_segm_dict=gt_segm_dict,
 )
 centered_img = pn.Row(pn.layout.HSpacer(), img_plt, pn.layout.HSpacer())
 pn.template.MaterialTemplate(
