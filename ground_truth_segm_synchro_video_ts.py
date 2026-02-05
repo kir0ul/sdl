@@ -10,13 +10,12 @@ import pandas as pd
 import panel as pn
 
 from PIL import Image
-import h5py
 import cv2
 
 import warnings
 import datetime as dt
-import json
 from tqdm.auto import tqdm
+from segmentation_utils import get_gtdict_filenames, read_h5_data, ts2df
 
 pn.extension()
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -34,60 +33,6 @@ FILENUM = 0
 
 
 pn.extension(design="material", sizing_mode="stretch_width")
-
-
-def read_h5_data(fname):
-    hf = h5py.File(fname, "r")
-    print(list(hf.keys()))
-    js = hf.get("joint_state_info")
-    joint_time = np.array(js.get("joint_time"))
-    joint_pos = np.array(js.get("joint_positions"))
-    joint_vel = np.array(js.get("joint_velocities"))
-    joint_eff = np.array(js.get("joint_effort"))
-    joint_data = [joint_time, joint_pos, joint_vel, joint_eff]
-
-    tf = hf.get("transform_info")
-    tf_time = np.array(tf.get("transform_time"))
-    tf_pos = np.array(tf.get("transform_positions"))
-    tf_rot = np.array(tf.get("transform_orientations"))
-    tf_data = [tf_time, tf_pos, tf_rot]
-    # print(tf_pos)
-
-    wr = hf.get("wrench_info")
-    wrench_time = np.array(wr.get("wrench_time"))
-    wrench_frc = np.array(wr.get("wrench_force"))
-    wrench_trq = np.array(wr.get("wrench_torque"))
-    wrench_data = [wrench_time, wrench_frc, wrench_trq]
-
-    gp = hf.get("gripper_info")
-    gripper_time = np.array(gp.get("gripper_time"))
-    gripper_pos = np.array(gp.get("gripper_position"))
-    # gripper_time = []
-    # gripper_pos = []
-    gripper_data = [gripper_time, gripper_pos]
-
-    hf.close()
-
-    return joint_data, tf_data, wrench_data, gripper_data
-
-
-def get_gtdict_filenames(ground_truth_segm_file, filenum):
-    if not ground_truth_segm_file.exists():
-        print(
-            "JSON ground truth segmentation file not found:\n"
-            f"`{ground_truth_segm_file}`"
-        )
-        return
-
-    # Load JSON as dict
-    with open(ground_truth_segm_file) as fid:
-        json_str = fid.read()
-    json_str = json.loads(json_str)
-    gt_array = json_str.get("groundtruth")
-    gt_segm_dict = gt_array[filenum]
-    video_file = gt_segm_dict.get("video")
-    hdf5_file = gt_segm_dict.get("hdf5")
-    return gt_segm_dict, video_file, hdf5_file
 
 
 def get_line_plot(traj, epoch_queried, gt_segm_dict=None, show_segments=None):
@@ -276,48 +221,6 @@ def get_video_fps(video_path):
     print(f"Frames per second in video: {fps}")
     video.release()
     return fps
-
-
-def ts2df(tf_data, gripper_data):
-    # ts_time = tf_data[0][:, 0] + tf_data[0][:, 1] * (10.0**-9)
-
-    def conv2timestamps(tarray):
-        # nanosec_conv = 1e-9
-        time_sec = tarray[:, 0]
-        time_nanosec = tarray[:, 1]
-        # time = time_sec + time_nanosec * nanosec_conv
-
-        timestamps = []
-        for t_idx, t_val in enumerate(time_sec):
-            timestamp = pd.Timestamp(
-                time_sec[t_idx], unit="s", tz="EST"
-            ) + pd.to_timedelta(time_nanosec[t_idx], unit="ns")
-            timestamps.append(timestamp)
-        timestamps = pd.Series(timestamps)
-        return timestamps
-
-    tf_df = pd.DataFrame(
-        {
-            "x": tf_data[1][:, 0],
-            "y": tf_data[1][:, 1],
-            "z": tf_data[1][:, 2],
-            "timestamp": conv2timestamps(tf_data[0]),
-        }
-    )
-
-    gripper_df = pd.DataFrame(
-        {
-            "val": gripper_data[1].squeeze(),
-            "timestamp": conv2timestamps(gripper_data[0]),
-        }
-    )
-    gripper_df["val"] = gripper_df["val"].apply(lambda elem: elem / 100)
-
-    # Merge both DataFrames into one
-    traj = pd.merge_asof(tf_df, gripper_df, on="timestamp")
-    traj.dropna(inplace=True, ignore_index=True)
-    traj.rename(columns={"val": "gripper"}, inplace=True)
-    return traj
 
 
 gt_segm_dict, video_file, hdf5_file = get_gtdict_filenames(
