@@ -20,10 +20,13 @@ For more general case
 ** DONE Library of skills code
 ** DONE Get data for new tasks
 ** Symbolic plan?
-** TODO Segment new data
+** DONE Segment new data
 *** Input: HDF5 files
 *** Outputs: Arrays of segmented primitives
 ** TODO Start draft
+** DONE Learn elastic maps
+** DONE Add start & stop constraints
+** TODO Stitching
 * DONE Tasks
 ** Clean in robosuite
 ** Collect force?
