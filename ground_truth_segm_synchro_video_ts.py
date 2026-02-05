@@ -90,7 +90,7 @@ def get_gtdict_filenames(ground_truth_segm_file, filenum):
     return gt_segm_dict, video_file, hdf5_file
 
 
-def get_line_plot(traj, epoch_queried, gt_segm_dict=None, skill_choice=None):
+def get_line_plot(traj, epoch_queried, gt_segm_dict=None, show_segments=None):
     slider_ts = dt.datetime.fromtimestamp(epoch_queried)  # - dt.timedelta(hours=1)
     vline = hv.VLine(slider_ts).opts(color="black", line_dash="dashed", line_width=3)
     lineplot_tf = traj.hvplot(x="timestamp", y=["x", "y", "z"], height=400).opts(
@@ -106,57 +106,55 @@ def get_line_plot(traj, epoch_queried, gt_segm_dict=None, skill_choice=None):
     y_top = y_high + 0.1 * y_range
     y_bottom = y_low - 0.1 * y_range
 
-    if skill_choice == "HigherLevel":
-        for sect_key in gt_segm_dict[skill_choice]:
-            sect_val = gt_segm_dict[skill_choice][sect_key]
-            xs = traj.timestamp[
-                (
-                    traj.timestamp
-                    > pd.Timestamp(
-                        dt.datetime.fromtimestamp(sect_val["ini"])
-                        - dt.timedelta(hours=1),
-                        tz="EST",
-                    )
-                )
-                & (
-                    traj.timestamp
-                    < pd.Timestamp(
-                        dt.datetime.fromtimestamp(sect_val["end"])
-                        - dt.timedelta(hours=1),
-                        tz="EST",
-                    )
-                )
-            ] - dt.timedelta(hours=5)
-            spread = hv.Spread(
-                (
-                    xs,
-                    y_range,
-                    y_range - y_bottom,
-                    y_range + y_top,
-                ),
-                label=sect_key,
-            ).opts(fill_alpha=0.15)
-            overlay = overlay * spread
-
-    elif skill_choice == "LowerLevel":
-        palette = hv.Palette.default_cycles["Set1"]
-        for idx, sect_key in enumerate(gt_segm_dict[skill_choice]):
-            sect_val = gt_segm_dict[skill_choice][sect_key]
-            for sect_cur in sect_val:
+    palette = hv.Palette.default_cycles["Set1"]
+    if show_segments == "Segmented":
+        for idx, sect_key in enumerate(gt_segm_dict["segments"]):
+            sect_val = gt_segm_dict["segments"][sect_key]
+            if isinstance(sect_val, list):
+                for sect_cur in sect_val:
+                    xs = traj.timestamp[
+                        (
+                            traj.timestamp
+                            > pd.Timestamp(
+                                dt.datetime.fromtimestamp(sect_cur["ini"]),
+                                # - dt.timedelta(hours=1),
+                                tz="EST",
+                            )
+                        )
+                        & (
+                            traj.timestamp
+                            < pd.Timestamp(
+                                dt.datetime.fromtimestamp(sect_cur["end"]),
+                                # - dt.timedelta(hours=1),
+                                tz="EST",
+                            )
+                        )
+                    ] - dt.timedelta(hours=5)
+                    spread = hv.Spread(
+                        (
+                            xs,
+                            y_range,
+                            y_range - y_bottom,
+                            y_range + y_top,
+                        ),
+                        label=sect_key,
+                    ).opts(fill_alpha=0.15, color=palette[idx])
+                    overlay = overlay * spread
+            elif isinstance(sect_val, dict):
                 xs = traj.timestamp[
                     (
                         traj.timestamp
                         > pd.Timestamp(
-                            dt.datetime.fromtimestamp(sect_cur["ini"])
-                            - dt.timedelta(hours=1),
+                            dt.datetime.fromtimestamp(sect_val["ini"]),
+                            # - dt.timedelta(hours=1),
                             tz="EST",
                         )
                     )
                     & (
                         traj.timestamp
                         < pd.Timestamp(
-                            dt.datetime.fromtimestamp(sect_cur["end"])
-                            - dt.timedelta(hours=1),
+                            dt.datetime.fromtimestamp(sect_val["end"]),
+                            # - dt.timedelta(hours=1),
                             tz="EST",
                         )
                     )
@@ -171,6 +169,8 @@ def get_line_plot(traj, epoch_queried, gt_segm_dict=None, skill_choice=None):
                     label=sect_key,
                 ).opts(fill_alpha=0.15, color=palette[idx])
                 overlay = overlay * spread
+            else:
+                raise ValueError("Unexpected value in ground truth JSON file")
 
     return overlay.opts(ylim=(y_bottom, y_top))
 
@@ -352,7 +352,7 @@ line_plt = pn.bind(
     get_line_plot,
     traj=traj,
     epoch_queried=slider_widget,
-    skill_choice=choice_dropdown,
+    show_segments=choice_dropdown,
     gt_segm_dict=gt_segm_dict,
 )
 img_plt = pn.bind(
