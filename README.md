@@ -7,3 +7,11 @@ The data is expected to be in the `data` folder at the root of the project.
 
 ## Ground truth segmentation
 To build the ground truth segmentation file, run the following script: `panel serve ground_truth_segm_synchro_video_ts.py`, and open the URL (e.g. http://localhost:5006/ground_truth_segm_synchro_video_ts) in your browser.
+
+## Code requirements
+
+The following code is required to run the notebook:
+``` sh
+git clone git@github.com:brenhertel/ElasticMaps.git
+```
+
