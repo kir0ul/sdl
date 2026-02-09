@@ -17,8 +17,6 @@ import datetime as dt
 from tqdm.auto import tqdm
 from segmentation_utils import get_gtdict_filenames, read_h5_data, ts2df
 
-pn.extension()
-warnings.filterwarnings("ignore", category=UserWarning)
 
 # PRIMARY_COLOR = "#0072B5"
 # SECONDARY_COLOR = "#B54300"
@@ -27,12 +25,15 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # )
 # hv.extension('bokeh')
 
+pn.extension()
+pn.extension(design="material", sizing_mode="stretch_width")
+pn.config.inline = True  # Make the app work offline
+warnings.filterwarnings("ignore", category=UserWarning)
+
+
 DATA_PATH_ROOT = Path(".") / "data"
 GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT.parent / "segm_ground_truth.json"
-FILENUM = 0
-
-
-pn.extension(design="material", sizing_mode="stretch_width")
+FILENUM = 1
 
 
 def get_line_plot(traj, epoch_queried, gt_segm_dict=None, show_segments=None):

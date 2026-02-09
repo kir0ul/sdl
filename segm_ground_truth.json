@@ -29,17 +29,18 @@
           "end": 1769723311
         }
       }
-    } ,{
+    },
+    {
       "video": "long-task-2.MOV",
       "hdf5": "long-task-2.h5",
-      "synchro_vid": 2703,
-      "synchro_ts": 2733,
+      "synchro_vid": 88,
+      "synchro_ts": 118,
       "segments": {
         "open-drawer": {
           "ini": 1769723430,
           "end": 1769723436
         },
-        "pick&place": [ 
+        "pick&place": [
           {
             "ini": 1769723440,
             "end": 1769723449
@@ -58,7 +59,7 @@
           "end": 1769723510
         }
       }
-    }, 
+    },
     {
       "video": "pour-1.MOV",
       "hdf5": "pour-1.h5",
@@ -88,7 +89,8 @@
           "end": 1769723311
         }
       }
-    },{
+    },
+    {
       "video": "long-task-2.MOV",
       "hdf5": "long-task-2.h5",
       "synchro_vid": 2036,
@@ -147,8 +149,7 @@
           "end": 1769723311
         }
       }
-    }
-    ,
+    },
     {
       "video": "set_table-1.MOV",
       "hdf5": "set_table-1.h5",

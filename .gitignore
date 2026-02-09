@@ -1,3 +1,5 @@
+*.MOV
+*.h5
 *.bkp
 .direnv
 

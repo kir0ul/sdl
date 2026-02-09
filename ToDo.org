@@ -9,24 +9,39 @@ https://wiki.ros.org/tf2/Tutorials/Quaternions
 For more general case
 ** Better to save the raw timeseries or the skills objects?
 *** Keep both
+** KILL Missing identification of skill?
+*** Grounding
+** What data types to learn in the LfD?
+*** TODO Gripper
+*** Orientation
 * Code
 ** KILL Damping of DMP too high
-** TODO Resample each segment to the same size
+** DONE Resample each segment to the same size
+** TODO LfD not learned from the lib!!
+** TODO Plots
+*** Transparent background
+*** LaTeX font
 * Next steps
 ** Schema
 [[file:docs/framework-schema.drawio.png]]
-*** LfD learning after building library?
+*** TODO LfD learning after building library?
+*** TODO Loop LfD \to stitch as composition of skills
 *** DONE Rename to "Segmentation" only
 ** DONE Library of skills code
 ** DONE Get data for new tasks
-** Symbolic plan?
+** TODO Symbolic plan?
+*** Verification step to check of pre/post conditions met in the activations/camera
+*** Reproduce the long task with different order, e.g. close the drawer at the end
 ** DONE Segment new data
 *** Input: HDF5 files
 *** Outputs: Arrays of segmented primitives
-** TODO Start draft
+** DONE Start Overleaf draft
 ** DONE Learn elastic maps
-** DONE Add start & stop constraints
-** TODO Stitching
+** DONE Composition/Stitching
+Add start & stop constraints
+** TODO Export long task + subtasks as CSV
+** TODO Finish ground truth segmentation
+** Move data to open repository
 * DONE Tasks
 ** Clean in robosuite
 ** Collect force?
