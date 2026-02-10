@@ -31,9 +31,11 @@ pn.config.inline = True  # Make the app work offline
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
+##### To be changed #####
 DATA_PATH_ROOT = Path(".") / "data"
 GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT.parent / "segm_ground_truth.json"
 FILENUM = 1
+##### To be changed #####
 
 
 def get_line_plot(traj, epoch_queried, gt_segm_dict=None, show_segments=None):
@@ -127,7 +129,7 @@ def conv_epoch2frame(
     frame_synchro_diff = abs(synchro_ts - synchro_vid)
     frame_idx = round(
         (epoch_queried - epoch_ini) * total_frames / (epoch_end - epoch_ini)
-        - 2 * frame_synchro_diff
+        - frame_synchro_diff
     )
     return frame_idx
 
