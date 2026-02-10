@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 ##### To be changed #####
 DATA_PATH_ROOT = Path(".") / "data"
 GROUND_TRUTH_SEGM_FILE = DATA_PATH_ROOT.parent / "segm_ground_truth.json"
-FILENUM = 1
+FILENUM = 0
 ##### To be changed #####
 
 
