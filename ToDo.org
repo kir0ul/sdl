@@ -23,9 +23,9 @@ For more general case
 *** LaTeX font
 * Next steps
 ** Schema
-[[file:docs/framework-schema.drawio.png]]
-*** TODO LfD learning after building library?
-*** TODO Loop LfD \to stitch as composition of skills
+[[file:docs/framework-schema-2-steps.drawio.png]]
+*** DONE LfD learning after building library?
+*** DONE Loop LfD \to stitch as composition of skills
 *** DONE Rename to "Segmentation" only
 ** DONE Library of skills code
 ** DONE Get data for new tasks
@@ -35,12 +35,11 @@ For more general case
 ** DONE Segment new data
 *** Input: HDF5 files
 *** Outputs: Arrays of segmented primitives
-** DONE Start Overleaf draft
 ** DONE Learn elastic maps
 ** DONE Composition/Stitching
 Add start & stop constraints
-** TODO Export long task + subtasks as CSV
-** TODO Finish ground truth segmentation
+** DONE Export long task + subtasks as CSV
+** DONE Finish ground truth segmentation
 ** Move data to open repository
 * DONE Tasks
 ** Clean in robosuite
@@ -56,3 +55,8 @@ Add start & stop constraints
 ** Use plastic bottle to pour beans
 ** Drawer subtask to be discovered
 ** Switch from DMP to elastic map
+* Paper
+** DONE Start Overleaf draft
+** Make clear that the main goal of the paper is skill detection
+** Segmentation with moving objects
+*** If EEF is moving with no object \to reaching
