@@ -18,9 +18,12 @@ For more general case
 ** KILL Damping of DMP too high
 ** DONE Resample each segment to the same size
 ** TODO LfD not learned from the lib!!
+*** TODO Learn from several skills if more than one demo
 ** TODO Plots
 *** Transparent background
 *** LaTeX font
+** TODO Reproduce long task with skills from different subtasks
+** DONE Make CPD work somehow!
 * Next steps
 ** Schema
 [[file:docs/framework-schema-2-steps.drawio.png]]
@@ -54,9 +57,20 @@ Add start & stop constraints
 ** Put objects in box/just mark objects
 ** Use plastic bottle to pour beans
 ** Drawer subtask to be discovered
-** Switch from DMP to elastic map
+** DONE Switch from DMP to elastic map
 * Paper
 ** DONE Start Overleaf draft
 ** Make clear that the main goal of the paper is skill detection
 ** Segmentation with moving objects
 *** If EEF is moving with no object \to reaching
+** Mention alternatives CPD methods
+** Section of discovery of new skills
+*** Similarity metric \to explain alternatives
+** Make diagram for planning alternatives
+** Add experiment setup images
+* Video
+** Show demo and repro in parallel (left & right) running at the same time in the video
+** Explain main points with boxes
+*** Skills discovered
+*** Skills learned
+*** Composition/alternative planning
