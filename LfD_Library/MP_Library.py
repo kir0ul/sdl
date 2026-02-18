@@ -44,7 +44,7 @@ class MP_Library(object):
                 print(f"Class matched: '{class_id}'")
         else:
             if name is None:
-                name = "Skill_" + str(self.get_num_demos())
+                name = "Skill_" + str(self.get_num_skills())
             self.library[name] = [demo]
             out = name
             if self.DEBUG:
@@ -56,6 +56,9 @@ class MP_Library(object):
         for class_key, demo_list in self.library.items():
             sum += len(demo_list)
         return sum
+
+    def get_num_skills(self):
+        return len(self.library)
 
     def display(self):
         print("------------------")
@@ -124,7 +127,9 @@ class MP_Library(object):
                         )
                         # axs[row, col].legend()
                         if dim_i == 0:
-                            axs[skill_i, dim_i].set_ylabel(class_key, fontsize=12)
+                            axs[skill_i, dim_i].set_ylabel(
+                                class_key.replace("_", " "), fontsize=12
+                            )
                         if skill_i == 0:
                             axs[skill_i, dim_i].set_title(
                                 f"Dimension {dim_i}", fontsize=12
