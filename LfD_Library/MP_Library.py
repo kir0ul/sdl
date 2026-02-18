@@ -111,6 +111,8 @@ class MP_Library(object):
             fig, axs = plt.subplots(
                 nrows=n_classes, ncols=n_dims, figsize=(3 * n_dims, n_classes)
             )
+            if len(axs.shape) < 2:
+                axs = axs[np.newaxis, :]
             for skill_i, (class_key, demo_list) in enumerate(self.library.items()):
                 for demo_i, demo in enumerate(demo_list):
                     for dim_i in range(n_dims):
