@@ -1,4 +1,4 @@
-# SLC
+# SDL
 
 ## Get the data
 The data is expected to be in the `data` folder at the root of the project.

@@ -105,28 +105,31 @@ class MP_Library(object):
             print("Nothing to plot!")
             return
 
-        n_pts, n_dims = np.shape(list(self.library.values())[0][0])
-        n_classes = len(self.library)
-        fig, axs = plt.subplots(
-            nrows=n_classes, ncols=n_dims, figsize=(3 * n_dims, n_classes)
-        )
-        for skill_i, (class_key, demo_list) in enumerate(self.library.items()):
-            for demo_i, demo in enumerate(demo_list):
-                for dim_i in range(n_dims):
-                    axs[skill_i, dim_i].plot(
-                        demo[:, dim_i],
-                        color=colors[demo_i % len(colors)],
-                        # alpha=0.8,
-                        # label=class_key,
-                    )
-                    # axs[row, col].legend()
-                    if dim_i == 0:
-                        axs[skill_i, dim_i].set_ylabel(class_key, fontsize=12)
-                    if skill_i == 0:
-                        axs[skill_i, dim_i].set_title(f"Dimension {dim_i}", fontsize=12)
-        fig.tight_layout()
-        plt.show()
-        return
+        with plt.style.context("ggplot"):
+            n_pts, n_dims = np.shape(list(self.library.values())[0][0])
+            n_classes = len(self.library)
+            fig, axs = plt.subplots(
+                nrows=n_classes, ncols=n_dims, figsize=(3 * n_dims, n_classes)
+            )
+            for skill_i, (class_key, demo_list) in enumerate(self.library.items()):
+                for demo_i, demo in enumerate(demo_list):
+                    for dim_i in range(n_dims):
+                        axs[skill_i, dim_i].plot(
+                            demo[:, dim_i],
+                            color=colors[demo_i % len(colors)],
+                            # alpha=0.8,
+                            # label=class_key,
+                        )
+                        # axs[row, col].legend()
+                        if dim_i == 0:
+                            axs[skill_i, dim_i].set_ylabel(class_key, fontsize=12)
+                        if skill_i == 0:
+                            axs[skill_i, dim_i].set_title(
+                                f"Dimension {dim_i}", fontsize=12
+                            )
+            fig.tight_layout()
+            plt.show()
+            return
 
     def save_h5(self, filename="library.h5"):
         hf = h5py.File(filename, "w")
