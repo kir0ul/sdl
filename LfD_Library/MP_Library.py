@@ -59,7 +59,7 @@ class MP_Library(object):
 
     def display(self):
         print("------------------")
-        print("--- MP_Library ---")
+        print("--- MP Library ---")
         print("------------------")
         for class_key, demo_list in self.library.items():
             print(f"+ {class_key}: {len(demo_list)}")
@@ -97,50 +97,35 @@ class MP_Library(object):
             plt.legend()
             plt.show()
         else:
-            print("Plotting not yet implemented for more than 2 dimensions!")
+            print("Plotting not implemented for more than 2 dimensions!")
         return
 
     def plot_separate(self):
         if self.get_num_demos() < 1:
             print("Nothing to plot!")
             return
+
         n_pts, n_dims = np.shape(list(self.library.values())[0][0])
-        if n_dims == 2:
-            n_classes = len(self.library)
-            a, b = golden_ratio_factors(n_classes)
-            fig, axs = plt.subplots(nrows=b, ncols=a, squeeze=False)
-            row = 0
-            col = 0
-            idx = row + col
-            class_num = 0
-            for class_key, demo_list in self.library.items():
-                demo = demo_list[0]
-                axs[row, col].plot(
-                    demo[:, 0],
-                    demo[:, 1],
-                    color=colors[idx % len(colors)],
-                    lw=5,
-                    alpha=0.8,
-                    label=class_key,
-                )
-                if len(demo_list) > 1:
-                    for demo in demo_list[1:]:
-                        axs[row, col].plot(
-                            demo[:, 0],
-                            demo[:, 1],
-                            color=colors[idx % len(colors)],
-                            lw=5,
-                            alpha=0.8,
-                        )
-                axs[row, col].legend()
-                idx += 1
-                col += 1
-                if col >= a:
-                    col -= a
-                    row += 1
-            plt.show()
-        else:
-            print("Plotting not yet implemented for more than 2 dimensions!")
+        n_classes = len(self.library)
+        fig, axs = plt.subplots(
+            nrows=n_classes, ncols=n_dims, figsize=(3 * n_dims, n_classes)
+        )
+        for skill_i, (class_key, demo_list) in enumerate(self.library.items()):
+            for demo_i, demo in enumerate(demo_list):
+                for dim_i in range(n_dims):
+                    axs[skill_i, dim_i].plot(
+                        demo[:, dim_i],
+                        color=colors[demo_i % len(colors)],
+                        # alpha=0.8,
+                        # label=class_key,
+                    )
+                    # axs[row, col].legend()
+                    if dim_i == 0:
+                        axs[skill_i, dim_i].set_ylabel(class_key, fontsize=12)
+                    if skill_i == 0:
+                        axs[skill_i, dim_i].set_title(f"Dimension {dim_i}", fontsize=12)
+        fig.tight_layout()
+        plt.show()
         return
 
     def save_h5(self, filename="library.h5"):
