@@ -112,7 +112,10 @@ class MP_Library(object):
             n_pts, n_dims = np.shape(list(self.library.values())[0][0])
             n_classes = len(self.library)
             fig, axs = plt.subplots(
-                nrows=n_classes, ncols=n_dims, figsize=(3 * n_dims, n_classes)
+                nrows=n_classes,
+                ncols=n_dims,
+                figsize=(3 * n_dims, n_classes),
+                sharex=True,
             )
             if len(axs.shape) < 2:
                 axs = axs[np.newaxis, :]
@@ -134,9 +137,11 @@ class MP_Library(object):
                             axs[skill_i, dim_i].set_title(
                                 f"Dimension {dim_i}", fontsize=12
                             )
+            fig.patch.set_alpha(0)
+            fig.patch.set_facecolor("white")
             fig.tight_layout()
             plt.show()
-            return
+        return
 
     def save_h5(self, filename="library.h5"):
         hf = h5py.File(filename, "w")
