@@ -12,16 +12,16 @@ For more general case
 ** KILL Missing identification of skill?
 *** Grounding
 ** What data types to learn in the LfD?
-*** TODO Gripper
-*** Orientation
+*** DONE Gripper
+*** KILL Orientation
 * Code
 ** KILL Damping of DMP too high
 ** DONE Resample each segment to the same size
 ** TODO LfD not learned from the lib!!
-*** TODO Learn from several skills if more than one demo
-** TODO Plots
-*** Transparent background
-*** LaTeX font
+*** DONE Learn from several skills if more than one demo
+** DONE Plots
+*** DONE Transparent background
+*** DONE LaTeX font
 ** TODO Reproduce long task with skills from different subtasks
 ** DONE Make CPD work somehow!
 * Next steps
@@ -74,3 +74,16 @@ Add start & stop constraints
 *** Skills discovered
 *** Skills learned
 *** Composition/alternative planning
+
+* Similarity/classification
+** TODO Normalize before Frechet
+** Learn the similarity threashold?
+** TODO Add features to the X matrix before checking for similarity
+*** Fourier
+*** Polynomial
+*** Gaussian
+** Addition + weighting several metrics?
+** More weight to the gripper feature?
+* Compare with other baselines
+** Compare segmentation with HDP-
+** TODO Compare to Prados et al.
