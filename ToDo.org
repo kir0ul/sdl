@@ -1,9 +1,9 @@
 #+title: ToDo
 
-* Data
+* DONE Data
 ** DONE Record hand quaternions
 https://wiki.ros.org/tf2/Tutorials/Quaternions
-* Questions
+* DONE Questions
 ** Hyperparam search for ruptures?
 *** [X] What's the use of a change point detection method if we already have activations functions?
 For more general case
@@ -14,15 +14,15 @@ For more general case
 ** What data types to learn in the LfD?
 *** DONE Gripper
 *** KILL Orientation
-* Code
+* DONE Code
 ** KILL Damping of DMP too high
 ** DONE Resample each segment to the same size
-** TODO LfD not learned from the lib!!
+** DONE LfD not learned from the lib!!
 *** DONE Learn from several skills if more than one demo
 ** DONE Plots
 *** DONE Transparent background
 *** DONE LaTeX font
-** TODO Reproduce long task with skills from different subtasks
+** DONE Reproduce long task with skills from different subtasks
 ** DONE Make CPD work somehow!
 * Next steps
 ** Schema
@@ -76,14 +76,17 @@ Add start & stop constraints
 *** Composition/alternative planning
 
 * Similarity/classification
-** TODO Normalize before Frechet
-** Learn the similarity threashold?
-** TODO Add features to the X matrix before checking for similarity
+** DONE Normalize before Frechet
+** Learn the similarity threshold?
+** DONE Add features to the X matrix before checking for similarity
 *** Fourier
-*** Polynomial
+*** DONE Polynomial
 *** Gaussian
 ** Addition + weighting several metrics?
-** More weight to the gripper feature?
+** DONE More weight to the gripper feature?
+And more weight to x/y/z than to velocities or polynomial features
+** PCA with all the new features?
+** [?] Keep only sign of torsion and curvature?
 * Compare with other baselines
-** Compare segmentation with HDP-
+** Compare segmentation with HDP-HMM/GP-HSMM
 ** TODO Compare to Prados et al.

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+from sklearn.preprocessing import StandardScaler
 
 colors = list(mcolors.TABLEAU_COLORS)
 import h5py
@@ -27,15 +28,12 @@ class MP_Library(object):
         self.threshold = threshold
         self.metric = metric
 
-    def add_primitive(self, demo, name=None):
-        similarities = []
+    def add_primitive(self, demo, name=None, standardize=False, weights=None):
         out = None
-        for class_key, demo_list in self.library.items():
-            similarities.append(
-                min([self.metric(demo, old_demo) for old_demo in demo_list])
-            )
-            if self.DEBUG:
-                print(f"Class: '{class_key}' - Similarity: {similarities[-1]:.3f}")
+        similarities = self.compute_similarities(
+            demo, standardize=standardize, weights=weights
+        )
+
         if len(similarities) > 0 and min(similarities) < self.threshold:
             class_id = list(self.library.keys())[np.argmin(similarities)]
             self.library[class_id].append(demo)
@@ -50,6 +48,50 @@ class MP_Library(object):
             if self.DEBUG:
                 print(f"Class not matched, new class: '{name}'")
         return out
+
+    def compute_similarities(self, demo, standardize=False, weights=None):
+        similarities = []
+        for class_key, demo_list in self.library.items():
+            # similarities.append(
+            #     min([self.metric(demo, old_demo) for old_demo in demo_list])
+            # )
+            similarities_tmp = []
+            for old_demo in demo_list:
+                if standardize:
+                    scaler_demo = StandardScaler()
+                    scaler_old_demo = StandardScaler()
+                    demo_standard = scaler_demo.fit_transform(demo)
+                    old_demo_standard = scaler_old_demo.fit_transform(old_demo)
+                    if not weights is None:
+                        demo_standard = self.weight_features(demo_standard, weights)
+                        old_demo_standard = self.weight_features(
+                            old_demo_standard, weights
+                        )
+                    similarities_tmp.append(
+                        self.metric(demo_standard, old_demo_standard)
+                    )
+                else:
+                    if not weights is None:
+                        demo = self.weight_features(demo, weights)
+                        old_demo = self.weight_features(old_demo, weights)
+                    similarities_tmp.append(self.metric(demo, old_demo))
+            similarities.append(min(similarities_tmp))
+
+            if self.DEBUG:
+                print(f"Class: '{class_key}' - Similarity: {similarities[-1]:.3f}")
+        return similarities
+
+    def weight_features(self, X, weights):
+        assert len(weights.shape) < 2, "`weights` should be a vector"
+        assert X.shape[1] == weights.shape[0], (
+            "`weights` and `X` should have the same length"
+            f" but `weights` is {weights.shape[0]} and `X` is {X.shape[0]}"
+        )
+
+        new_X = np.ones_like(X) * np.nan
+        for feat_i in range(X.shape[1]):
+            new_X[:, feat_i] = weights[feat_i] * X[:, feat_i]
+        return new_X
 
     def get_num_demos(self):
         sum = 0

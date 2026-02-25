@@ -1,3 +1,4 @@
+*.dtmp
 LfD_segm_*.txt
 *.MOV
 *.h5
