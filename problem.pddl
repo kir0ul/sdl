@@ -6,8 +6,7 @@
     (hand-empty)
     (drawer-closed)
     (on-table bottle)
-    (clear bottle)
-    
+    (clear bottle) ;; remove??
     (inside-drawer bowl)
     (inside-drawer cup)
     (on cup bowl)   ;; Cup is on the bowl

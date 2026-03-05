@@ -4,7 +4,7 @@
   
   (:predicates 
     (on ?obj - physobj ?surface - physobj)
-    (on-table ?obj - physobj) ;; Keeping this for your goal requirement
+    (on-table ?obj - physobj) ;; For goal requirement
     (inside-drawer ?obj - physobj)
     (clear ?obj - physobj)
     (drawer-open)

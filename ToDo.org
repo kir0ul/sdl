@@ -1,5 +1,4 @@
 #+title: ToDo
-
 * DONE Data
 ** DONE Record hand quaternions
 https://wiki.ros.org/tf2/Tutorials/Quaternions
@@ -14,7 +13,7 @@ For more general case
 ** What data types to learn in the LfD?
 *** DONE Gripper
 *** KILL Orientation
-* DONE Code
+* TODO Code
 ** KILL Damping of DMP too high
 ** DONE Resample each segment to the same size
 ** DONE LfD not learned from the lib!!
@@ -22,19 +21,23 @@ For more general case
 ** DONE Plots
 *** DONE Transparent background
 *** DONE LaTeX font
+*** DONE ELMap plot
+**** Data in dash line and LfD as solid line (or reverse)
+**** Need 2 labels?
 ** DONE Reproduce long task with skills from different subtasks
 ** DONE Make CPD work somehow!
+** TODO Symbolic plan
+*** Verification step to check of pre/post conditions met in the activations/camera
+*** Reproduce the long task with different order, e.g. close the drawer at the end
+*** Call skills as different e.g. reaching from top & reaching from side
 * Next steps
-** Schema
+** DONE Schema
 [[file:docs/framework-schema-2-steps.drawio.png]]
 *** DONE LfD learning after building library?
 *** DONE Loop LfD \to stitch as composition of skills
 *** DONE Rename to "Segmentation" only
 ** DONE Library of skills code
 ** DONE Get data for new tasks
-** TODO Symbolic plan?
-*** Verification step to check of pre/post conditions met in the activations/camera
-*** Reproduce the long task with different order, e.g. close the drawer at the end
 ** DONE Segment new data
 *** Input: HDF5 files
 *** Outputs: Arrays of segmented primitives
@@ -66,16 +69,16 @@ Add start & stop constraints
 ** Mention alternatives CPD methods
 ** Section of discovery of new skills
 *** Similarity metric \to explain alternatives
-** Make diagram for planning alternatives
-** Add experiment setup images
-* Video
+** DONE Make diagram for planning alternatives
+** DONE Add experiment setup images
+* TODO Video
 ** Show demo and repro in parallel (left & right) running at the same time in the video
 ** Explain main points with boxes
 *** Skills discovered
 *** Skills learned
 *** Composition/alternative planning
 
-* Similarity/classification
+* DONE Similarity/classification
 ** DONE Normalize before Frechet
 ** Learn the similarity threshold?
 ** DONE Add features to the X matrix before checking for similarity
@@ -86,7 +89,7 @@ Add start & stop constraints
 ** DONE More weight to the gripper feature?
 And more weight to x/y/z than to velocities or polynomial features
 ** PCA with all the new features?
-** [?] Keep only sign of torsion and curvature?
-* Compare with other baselines
+** KILL Keep only sign of torsion and curvature?
+* DONE Compare with other baselines
 ** Compare segmentation with HDP-HMM/GP-HSMM
-** TODO Compare to Prados et al.
+** DONE Compare to Prados et al.
