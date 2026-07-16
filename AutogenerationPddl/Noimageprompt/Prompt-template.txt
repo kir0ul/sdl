@@ -1,0 +1,65 @@
+You are an expert in Automated Planning, Robotics, and PDDL.
+
+Your task is to generate a complete PDDL domain and problem for the robotic manipulation task described below.
+
+## Task Description
+
+<INSERT TASK DESCRIPTION HERE>
+
+## Instructions
+
+1. Identify all relevant objects and their types.
+2. Identify symbolic locations and object states.
+3. Infer the sequence of actions required to accomplish the task.
+4. Generate a reusable STRIPS-compatible PDDL domain and a corresponding problem instance.
+
+## Primitive Actions
+
+Model the task using high-level robotic manipulation primitives.
+
+Examples include:
+
+- move
+- grasp
+- release
+- place
+- pour
+- open
+- close
+- insert
+- remove
+- push
+- pull
+- wipe
+- press
+- rotate
+- fold
+- unfold
+- stack
+- unstack
+- shelve
+- dust
+- throw-away
+
+The generated actions should be parameterized (e.g., grasp(?robot ?object), place(?robot ?object ?location)) and reusable across similar tasks. Avoid object-specific actions such as grasp-bottle or pour-water-into-mug.
+
+## Assumptions
+
+- Use typed PDDL.
+- Assume a single robot with one gripper.
+- Ignore motion planning, collision checking, inverse kinematics, and perception.
+- Represent movement using symbolic locations.
+- Model only observable state changes.
+- Use parameterized action schemas (e.g., pick, place, pour) instead of object-specific actions.
+- The generated domain should be reusable for similar task instances.
+- Every predicate should be used by at least one action.
+- Every action should contribute toward achieving the goal.
+- The generated PDDL should be compatible with Fast Downward.
+
+## Output Format
+
+1. Task summary
+2. domain.pddl
+3. problem.pddl
+4. Expected plan
+5. Explanation of predicates and actions

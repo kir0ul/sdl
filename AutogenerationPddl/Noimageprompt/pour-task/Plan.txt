@@ -1,0 +1,8 @@
+(move start_loc bottle_loc)
+(grasp bottle bottle_loc)
+(move bottle_loc mug_loc)
+(tilt bottle)
+(pour bottle mug mug_loc)
+(rotate bottle)
+(move mug_loc bottle_loc)
+(place bottle bottle_loc)

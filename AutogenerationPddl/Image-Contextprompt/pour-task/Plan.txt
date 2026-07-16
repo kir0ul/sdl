@@ -1,0 +1,5 @@
+(grasp robot1 bottle loc-bottle)
+(move robot1 loc-bottle loc-cup)
+(pour robot1 bottle cup loc-cup)
+(move robot1 loc-cup loc-bottle)
+(place robot1 bottle loc-bottle)

@@ -1,0 +1,7 @@
+(remove mug bowl drawer_loc)
+(move drawer_loc mug_target_loc)
+(place mug mug_target_loc)
+(move mug_target_loc drawer_loc)
+(grasp bowl drawer_loc)
+(move drawer_loc bowl_target_loc)
+(place bowl bowl_target_loc)
