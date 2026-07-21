@@ -72,12 +72,11 @@ Add start & stop constraints
 ** DONE Make diagram for planning alternatives
 ** DONE Add experiment setup images
 * TODO Video
-** Show demo and repro in parallel (left & right) running at the same time in the video
+** DONE Show demo and repro in parallel (left & right) running at the same time in the video
 ** Explain main points with boxes
 *** Skills discovered
 *** Skills learned
-*** Composition/alternative planning
-
+*** KILL Composition/alternative planning
 * DONE Similarity/classification
 ** DONE Normalize before Frechet
 ** Learn the similarity threshold?
