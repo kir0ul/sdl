@@ -147,8 +147,10 @@ from diffusion_policy.evaluate import evaluate
 # for k, v in data.items():
 #     print(f"{k}: {v}")
 
-!wget https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
-!wget https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
+# !wget -O "long-task-1.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
+# !wget -O "long-task-2.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
+!curl -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
+!curl -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
 
 # !wget https://gitlab.com/kir0ul/semi-supervised-gmm/-/raw/main/segmentation_utils.py
 
@@ -166,7 +168,7 @@ from scipy.interpolate import make_splrep
 # )
 import h5py
 
-def plot_xyzgrip(traj, supervised_samples=None):
+def plot_xyzgrip(traj, time_type="timesteps", fname=None):
     with plt.style.context("ggplot"):
         fig, ax = plt.subplots(
             nrows=len(traj.columns) - 1,
@@ -190,8 +192,11 @@ def plot_xyzgrip(traj, supervised_samples=None):
         ax[-1].set_xlabel("Time")
         # ax.legend(loc="best")
         # axi.legend(bbox_to_anchor=(1.0, 1.02))
-        fig.autofmt_xdate()
+        if time_type == "timesteps":
+          fig.autofmt_xdate()
         fig.tight_layout()
+        if fname is not None:
+            fig.savefig(fname)
         plt.show()
 
 def resample_df(df, nb_points=256, smoothing_factor=0):
@@ -378,7 +383,7 @@ for file_i, file_val in enumerate(filenames):
     # hdf5_path = data_path_root / hdf5_file
     joint_data, tf_data, wrench_data, gripper_data = read_h5_data(fname=file_val)
     traj = xyzgrip2df(tf_data=tf_data, gripper_data=gripper_data)
-    plot_xyzgrip(traj=traj)  # , supervised_data=X)
+    plot_xyzgrip(traj=traj, fname=f"{str(file_val)[:-3]}.png")
     # traj_down, minmaxscaler, traj_down_scaled = preprocessing(
     #     traj=traj, resample_num=seq_length
     # )  # <--- Q: Scale or not scale?
@@ -445,29 +450,25 @@ act_dim = trajectories["actions"][0].shape[-1]
 print(f"obs_dim: {obs_dim}")
 print(f"act_dim: {act_dim}")
 
-def flatten_data(data):
-  vect = []
-  for item in data:
-      vect.extend(item.flatten())
-  vect = np.array(vect)
-  return vect
+# def flatten_data(data):
+#   vect = []
+#   for item in data:
+#       vect.extend(item.flatten())
+#   vect = np.array(vect)
+#   return vect
 
 # normalize data
 def get_data_stats(data):
-    data = flatten_data(data)
+    # data = flatten_data(data)
     data = data.reshape(-1,data.shape[-1])
-    # stats = {
-    #     'min': np.min(data, axis=0),
-    #     'max': np.max(data, axis=0)
-    # }
     stats = {
-        'min': np.min(data),
-        'max': np.max(data)
+        'min': np.min(data, axis=0),
+        'max': np.max(data, axis=0)
     }
     return stats
 
 def normalize_data(data, stats):
-    data = flatten_data(data)
+    # data = flatten_data(data)
     # print(f"Stats max: {stats['max']}\nStats min: {stats['min']}\nDivision: {stats['max'] - stats['min']}")
     # nomalize to [0,1]
     ndata = (data - stats['min']) / (stats['max'] - stats['min'])
@@ -531,8 +532,13 @@ class DemoDataset(Dataset): # Load everything into GPU memory
         stats = dict()
         normalized_train_data = dict()
         for key, data in self.trajectories.items():
-            stats[key] = get_data_stats(data)
-            normalized_train_data[key] = normalize_data(data, stats[key])
+          for idx in range(len(data)):
+            data_curr = data[idx]
+            if idx == 0:
+              stats[key] = []
+              normalized_train_data[key] = []
+            stats[key].append(get_data_stats(data_curr.numpy()))
+            normalized_train_data[key].append(normalize_data(data_curr, stats[key][idx]))
         self.stats = stats
         self.normalized_train_data = normalized_train_data
         # self.pred_horizon = pred_horizon
@@ -544,9 +550,12 @@ class DemoDataset(Dataset): # Load everything into GPU memory
         traj_idx, start, end = self.slices[index]
         L, act_dim = self.trajectories['actions'][traj_idx].shape
 
-        obs_seq = self.trajectories['observations'][traj_idx][max(0, start):start+self.obs_horizon]
+        # obs_seq = self.trajectories['observations'][traj_idx][max(0, start):start+self.obs_horizon]
+        obs_seq = self.normalized_train_data['observations'][traj_idx][max(0, start):start+self.obs_horizon]
         # start+self.obs_horizon is at least 1
-        act_seq = self.trajectories['actions'][traj_idx][max(0, start):end]
+        # act_seq = self.trajectories['actions'][traj_idx][max(0, start):end]
+        act_seq = self.normalized_train_data['actions'][traj_idx][max(0, start):end]
+
         if start < 0: # pad before the trajectory
             obs_seq = torch.cat([obs_seq[0].repeat(-start, 1), obs_seq], dim=0)
             act_seq = torch.cat([act_seq[0].repeat(-start, 1), act_seq], dim=0)
@@ -921,7 +930,8 @@ len(dataset.trajectories["observations"])
 max_steps = dataset.trajectories["observations"][0].shape[0]
 
 # get first observation
-obs = dataset.trajectories["observations"][0][0, :]
+obs_idx = 0
+obs = dataset.trajectories["observations"][obs_idx][0, :]
 
 # keep a queue of last 2 steps of observations
 obs_deque = collections.deque(
@@ -937,7 +947,7 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         # stack the last obs_horizon (2) number of observations
         obs_seq = np.stack(obs_deque)
         # normalize observation
-        nobs = normalize_data(obs_seq, stats=dataset.stats['observations'])
+        nobs = normalize_data(obs_seq, stats=dataset.stats['observations'][obs_idx])
         # nobs = obs_seq
         # device transfer
         nobs = torch.from_numpy(nobs).to(device, dtype=torch.float32)
@@ -974,7 +984,7 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         naction = naction.detach().to('cpu').numpy()
         # (B, pred_horizon, action_dim)
         naction = naction[0]
-        action_pred = unnormalize_data(naction, stats=dataset.stats['actions'])
+        action_pred = unnormalize_data(naction, stats=dataset.stats['actions'][obs_idx])
         # action_pred = naction
 
         # only take action_horizon number of actions
@@ -989,7 +999,7 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         for idx in range(len(action)):
             # stepping env
             # obs, reward, done, _, info = env.step(action[i])
-            obs = dataset.trajectories["observations"][0][idx, :]
+            obs = dataset.trajectories["observations"][obs_idx][idx, :]
             # save observations
             obs_deque.append(obs)
 
@@ -1015,5 +1025,5 @@ traj_res = pd.DataFrame(
 )
 traj_res
 
-plot_xyzgrip(traj=traj_res)
+plot_xyzgrip(traj=traj_res, time_type="index", fname="res.png")
 
