@@ -149,8 +149,8 @@ from diffusion_policy.evaluate import evaluate
 
 # !wget -O "long-task-1.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
 # !wget -O "long-task-2.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
-!curl -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
-!curl -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
+!curl -L -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
+!curl -L -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
 
 # !wget https://gitlab.com/kir0ul/semi-supervised-gmm/-/raw/main/segmentation_utils.py
 
@@ -450,17 +450,9 @@ act_dim = trajectories["actions"][0].shape[-1]
 print(f"obs_dim: {obs_dim}")
 print(f"act_dim: {act_dim}")
 
-# def flatten_data(data):
-#   vect = []
-#   for item in data:
-#       vect.extend(item.flatten())
-#   vect = np.array(vect)
-#   return vect
-
 # normalize data
 def get_data_stats(data):
-    # data = flatten_data(data)
-    data = data.reshape(-1,data.shape[-1])
+    data = data.reshape(-1,data.shape[-1]).cpu().numpy()
     stats = {
         'min': np.min(data, axis=0),
         'max': np.max(data, axis=0)
@@ -468,13 +460,13 @@ def get_data_stats(data):
     return stats
 
 def normalize_data(data, stats):
-    # data = flatten_data(data)
-    # print(f"Stats max: {stats['max']}\nStats min: {stats['min']}\nDivision: {stats['max'] - stats['min']}")
-    # nomalize to [0,1]
-    ndata = (data - stats['min']) / (stats['max'] - stats['min'])
+    denominator = stats['max'] - stats['min']
+    denominator[denominator == 0] = 1.0  # Prevent division by zero
+    # normalize to [0, 1]
+    ndata = (data.cpu().numpy() - stats['min']) / denominator
     # normalize to [-1, 1]
     ndata = ndata * 2 - 1
-    return ndata
+    return torch.tensor(ndata)
 
 def unnormalize_data(ndata, stats):
     ndata = (ndata + 1) / 2
@@ -497,12 +489,12 @@ class DemoDataset(Dataset): # Load everything into GPU memory
 
         # # Pre-compute all possible (traj_idx, start, end) tuples, this is very specific to Diffusion Policy
         # if 'delta_pos' in control_mode or control_mode == 'base_pd_joint_vel_arm_pd_joint_vel':
-        self.pad_action_arm = torch.zeros((trajectories['actions'][0].shape[1]-1,), device=device)
+        # self.pad_action_arm = torch.zeros((trajectories['actions'][0].shape[1]-1,), device=device)
         #     # to make the arm stay still, we pad the action with 0 in 'delta_pos' control mode
         #     # gripper action needs to be copied from the last action
         # # else:
         # #     raise NotImplementedError(f'Control Mode {args.control_mode} not supported')
-        self.obs_horizon, self.pred_horizon = obs_horizon, pred_horizon = obs_horizon, pred_horizon
+        # self.obs_horizon, self.pred_horizon = obs_horizon, pred_horizon = obs_horizon, pred_horizon
         self.slices = []
         num_traj = len(trajectories['actions'])
         total_transitions = 0
@@ -531,19 +523,23 @@ class DemoDataset(Dataset): # Load everything into GPU memory
         # compute statistics and normalized data to [-1,1]
         stats = dict()
         normalized_train_data = dict()
+        all_obs = torch.concatenate(trajectories["observations"], axis=0)
+        all_actions = torch.concatenate(trajectories["actions"], axis=0)
+        stats['observations'] = get_data_stats(all_obs)
+        stats['actions'] = get_data_stats(all_actions)
+
         for key, data in self.trajectories.items():
           for idx in range(len(data)):
             data_curr = data[idx]
             if idx == 0:
-              stats[key] = []
               normalized_train_data[key] = []
-            stats[key].append(get_data_stats(data_curr.numpy()))
-            normalized_train_data[key].append(normalize_data(data_curr, stats[key][idx]))
+            normalized_train_data[key].append(normalize_data(data_curr, stats[key]))
         self.stats = stats
         self.normalized_train_data = normalized_train_data
-        # self.pred_horizon = pred_horizon
+
+        self.pred_horizon = pred_horizon
         # self.action_horizon = action_horizon
-        # self.obs_horizon = obs_horizon
+        self.obs_horizon = obs_horizon
 
 
     def __getitem__(self, index):
@@ -560,11 +556,15 @@ class DemoDataset(Dataset): # Load everything into GPU memory
             obs_seq = torch.cat([obs_seq[0].repeat(-start, 1), obs_seq], dim=0)
             act_seq = torch.cat([act_seq[0].repeat(-start, 1), act_seq], dim=0)
         if end > L: # pad after the trajectory
-            gripper_action = act_seq[-1, -1]
-            pad_action = torch.cat((self.pad_action_arm, gripper_action[None]), dim=0)
+            # hold the last real action (pos_x, pos_y, pos_z, gripper) so the
+            # commanded end-effector position doesn't jump to the origin
+            pad_action = act_seq[-1]
             act_seq = torch.cat([act_seq, pad_action.repeat(end-L, 1)], dim=0)
+            # gripper_action = act_seq[-1, -1]
+            # pad_action = torch.cat((self.pad_action_arm, gripper_action[None]), dim=0)
+            # act_seq = torch.cat([act_seq, pad_action.repeat(end-L, 1)], dim=0)
             # making the robot (arm and gripper) stay still
-        assert obs_seq.shape[0] == self.obs_horizon and act_seq.shape[0] == self.pred_horizon
+        assert obs_seq.shape[0] == self.obs_horizon and act_seq.shape[0] == self.pred_horizon, f"obs_seq: {obs_seq.shape} != obs_horizon ({self.obs_horizon}), act_seq: {act_seq.shape} != pred_horizon ({self.pred_horizon})"
         return {
             'observations': obs_seq,
             'actions': act_seq,
@@ -875,8 +875,8 @@ for iteration, data_batch in enumerate(train_dataloader):
     # forward and compute loss
     last_tick = time.time()
     total_loss = agent.compute_loss(
-        obs_seq=data_batch["observations"],  # obs_batch_dict['state'] is (B, L, obs_dim)
-        action_seq=data_batch["actions"],  # (B, L, act_dim)
+        obs_seq=data_batch["observations"].to(device),  # obs_batch_dict['state'] is (B, L, obs_dim)
+        action_seq=data_batch["actions"].to(device),  # (B, L, act_dim)
     )
     timings["forward"] += time.time() - last_tick
 
@@ -931,7 +931,7 @@ max_steps = dataset.trajectories["observations"][0].shape[0]
 
 # get first observation
 obs_idx = 0
-obs = dataset.trajectories["observations"][obs_idx][0, :]
+obs = dataset.trajectories["observations"][obs_idx][0, :].cpu().numpy()
 
 # keep a queue of last 2 steps of observations
 obs_deque = collections.deque(
@@ -947,10 +947,11 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         # stack the last obs_horizon (2) number of observations
         obs_seq = np.stack(obs_deque)
         # normalize observation
-        nobs = normalize_data(obs_seq, stats=dataset.stats['observations'][obs_idx])
+        nobs = normalize_data(torch.tensor(obs_seq), stats=dataset.stats['observations'])
         # nobs = obs_seq
         # device transfer
-        nobs = torch.from_numpy(nobs).to(device, dtype=torch.float32)
+        # nobs = torch.from_numpy(nobs).to(device, dtype=torch.float32)
+        nobs = nobs.to(device, dtype=torch.float32)
 
         # infer action
         with torch.no_grad():
@@ -984,7 +985,7 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         naction = naction.detach().to('cpu').numpy()
         # (B, pred_horizon, action_dim)
         naction = naction[0]
-        action_pred = unnormalize_data(naction, stats=dataset.stats['actions'][obs_idx])
+        action_pred = unnormalize_data(naction, stats=dataset.stats['actions'])
         # action_pred = naction
 
         # only take action_horizon number of actions
@@ -999,18 +1000,19 @@ with tqdm(total=max_steps, desc="Inference") as pbar:
         for idx in range(len(action)):
             # stepping env
             # obs, reward, done, _, info = env.step(action[i])
-            obs = dataset.trajectories["observations"][obs_idx][idx, :]
+            obs = dataset.trajectories["observations"][obs_idx][step_idx, :].cpu().numpy()
             # save observations
             obs_deque.append(obs)
 
             # update progress bar
             step_idx += 1
             pbar.update(1)
-            if step_idx > max_steps:
+            if step_idx >= max_steps:
                 done = True
             if done:
                 break
 
+# Reshape as matrix
 actions_res = np.array(actions_res).reshape(-1, 4)
 actions_res.shape
 
