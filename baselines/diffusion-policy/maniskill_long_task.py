@@ -12,11 +12,11 @@ Original file is located at
 """
 
 # setup vulkan
-!mkdir -p /usr/share/vulkan/icd.d
-!wget -q https://raw.githubusercontent.com/haosulab/ManiSkill/main/docker/nvidia_icd.json
-!wget -q https://raw.githubusercontent.com/haosulab/ManiSkill/main/docker/10_nvidia.json
-!mv nvidia_icd.json /usr/share/vulkan/icd.d
-!mv 10_nvidia.json /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+!mkdir -p "/usr/share/vulkan/icd.d"
+!wget -q "https://raw.githubusercontent.com/haosulab/ManiSkill/main/docker/nvidia_icd.json"
+!wget -q "https://raw.githubusercontent.com/haosulab/ManiSkill/main/docker/10_nvidia.json"
+!mv "nvidia_icd.json" "/usr/share/vulkan/icd.d"
+!mv "10_nvidia.json" "/usr/share/glvnd/egl_vendor.d/10_nvidia.json"
 !apt install -y --no-install-recommends libvulkan-dev
 # dependencies
 !pip install --upgrade mani_skill tyro &> /dev/null # mute output
