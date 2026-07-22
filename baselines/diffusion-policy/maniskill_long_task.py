@@ -149,8 +149,8 @@ from diffusion_policy.evaluate import evaluate
 
 # !wget -O "long-task-1.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
 # !wget -O "long-task-2.h5" https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
-!curl -L -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5
-!curl -L -O https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5
+!curl -L -O "https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-1.h5"
+!curl -L -O "https://github.com/kir0ul/sdl/raw/refs/heads/main/data/long-task-2.h5"
 
 # !wget https://gitlab.com/kir0ul/semi-supervised-gmm/-/raw/main/segmentation_utils.py
 
