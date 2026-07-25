@@ -176,9 +176,12 @@ class MP_Library(object):
                                 class_key.replace("_", " "), fontsize=12
                             )
                         if skill_i == 0:
-                            axs[skill_i, dim_i].set_title(
-                                f"Dimension {dim_i}", fontsize=12
-                            )
+                            axs[skill_i, dim_i].set_title(f"Mode {dim_i}", fontsize=12)
+                        if dim_i == 3:
+                            axs[skill_i, dim_i].set_ylim(bottom=-1, top=1)
+                        if skill_i == 4:
+                            axs[skill_i, dim_i].set_ylim(bottom=-1, top=1)
+            fig.align_ylabels()
             fig.patch.set_alpha(0)
             fig.patch.set_facecolor("white")
             fig.tight_layout()

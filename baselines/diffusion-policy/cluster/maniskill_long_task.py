@@ -401,10 +401,10 @@ joint_data[2].shape, wrench_data[2].shape
 
 """### Hyperparameters"""
 
-# batch_size = 1024 # the batch size of sample from the replay memory
-batch_size = 32  # the batch size of sample from the replay memory
-# total_iters = 1_000_000 # total timesteps of the experiment
-total_iters = 100  # total timesteps of the experiment
+batch_size = 1024  # the batch size of sample from the replay memory
+# batch_size = 32 # the batch size of sample from the replay memory
+total_iters = 100_000  # total timesteps of the experiment
+# total_iters = 100 # total timesteps of the experiment
 # capture_video = False # whether to capture videos of the agent performances (check out `videos` folder)
 
 # Diffusion Policy specific arguments
@@ -417,14 +417,14 @@ diffusion_step_embed_dim = 2**6  # not very important
 print(f"diffusion_step_embed_dim: {diffusion_step_embed_dim}")
 # unet_dims = field(default_factory=lambda: [64, 128, 256]) # default setting is about ~4.5M params
 # unet_dims = [64, 128, 256] # default setting is about ~4.5M params
-# unet_dims = [2**6, 2**7, 2**8] # default setting is about ~4.5M params
-unet_dims = [2**4, 2**5, 2**6]  # default setting is about ~4.5M params
+unet_dims = [2**6, 2**7, 2**8]  # default setting is about ~4.5M params
+# unet_dims = [2**4, 2**5, 2**6] # default setting is about ~4.5M params
 print(f"unet_dims: {unet_dims}")
 n_groups = 8  # jigu says it is better to let each group have at least 8 channels; it seems 4 and 8 are simila
 
 # Environment/experiment specific arguments
 num_dataload_workers = 0  # the number of workers to use for loading the training data in the torch dataloader
-save_freq = 20  # the frequency of saving the model checkpoints. By default this is None and will only save checkpoints based on the best evaluation metrics.
+save_freq = 2000  # the frequency of saving the model checkpoints. By default this is None and will only save checkpoints based on the best evaluation metrics.
 log_freq = 1000  # the frequency of logging the training metrics
 
 # max_episode_steps = 200 #"""Change the environments' max_episode_steps to this value. Sometimes necessary if the demonstrations being imitated are too short. Typically the default max episode steps of environments in ManiSkill are tuned lower so reinforcement learning agents can learn faster."""
